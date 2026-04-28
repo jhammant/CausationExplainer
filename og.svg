@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="g" cx="30%" cy="20%" r="80%"><stop offset="0" stop-color="#123b4a"/><stop offset="0.55" stop-color="#0a1324"/><stop offset="1" stop-color="#050712"/></radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <g opacity="0.55" stroke="#f7f3e8" stroke-width="2">
+    <path d="M130 500 C260 390 330 355 465 305 S740 205 1030 110" fill="none"/>
+    <path d="M130 500 C320 520 520 455 700 325 S910 190 1030 110" fill="none" opacity="0.25"/>
+  </g>
+  <g filter="url(#glow)">
+    <circle cx="170" cy="485" r="22" fill="#67e8f9"/>
+    <circle cx="390" cy="350" r="30" fill="#34d399"/>
+    <circle cx="650" cy="285" r="38" fill="#fbbf24"/>
+    <circle cx="940" cy="145" r="52" fill="#f472b6"/>
+  </g>
+  <text x="85" y="135" fill="#f7f3e8" font-family="Georgia, serif" font-size="74">The Causation Meter</text>
+  <text x="90" y="200" fill="#c7d2fe" font-family="Arial, sans-serif" font-size="30">an interactive guide to Assembly Theory's physics of life</text>
+  <text x="90" y="545" fill="#67e8f9" font-family="monospace" font-size="25">assembly index × copy number → causal depth</text>
+</svg>
