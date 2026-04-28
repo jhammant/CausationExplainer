@@ -223,10 +223,20 @@
   <div class="card" style="margin-top:1rem">
     <h3>What would make this genuinely hard-hard?</h3>
     <ol class="pipeline">
-      <li>Parse SMILES/InChI or molecular graphs and canonicalise repeated subgraphs.</li>
-      <li>Search approximate minimal assembly paths over graph joins, with pruning and known chemistry constraints.</li>
-      <li>Use mass-spec fragmentation trees to infer which substructures are actually observed.</li>
-      <li>Combine assembly estimate, copy number, instrument confidence, and sample controls into a biosignature score.</li>
+      <li>Parse SMILES/InChI, InChIKey, or uploaded molecular graphs into a canonical atom-bond representation.</li>
+      <li>Canonicalise repeated subgraphs so rings, motifs, side chains, and duplicated fragments can be reused instead of recounted.</li>
+      <li>Search approximate minimal assembly paths over graph joins using branch-and-bound, memoisation, and chemistry-aware pruning.</li>
+      <li>Distinguish real intermediates from virtual intermediates: useful causal substructures may not be stable isolated molecules.</li>
+      <li>Generate competing assembly paths and show uncertainty rather than a single overconfident index.</li>
+      <li>Import mzML/mgf mass-spec data and build fragmentation trees from observed peaks, isotope patterns, and adducts.</li>
+      <li>Map observed fragments back onto molecular subgraphs to ask which assembly-path pieces are actually evidenced by the instrument.</li>
+      <li>Add NMR / MS/MS / chromatography confidence layers so the app can separate structural certainty from assembly inference.</li>
+      <li>Estimate copy number from abundance, concentration, sample volume, and instrument detection limits.</li>
+      <li>Compute the paper’s threshold formula from sample size, measurement limit M, and branching factor b instead of using fixed cutoffs.</li>
+      <li>Compare biological, abiotic, synthetic, and control samples to detect contamination and ordinary chemistry false positives.</li>
+      <li>Expose a reproducible audit trail: input data → graph → fragments → assembly path candidates → score.</li>
+      <li>Benchmark against published molecular assembly values, including simple organics, metabolites, peptides, and Taxol-like natural products.</li>
+      <li>Combine assembly estimate, copy number, instrument confidence, and sample controls into a defensible biosignature score.</li>
     </ol>
   </div>
 </section>
