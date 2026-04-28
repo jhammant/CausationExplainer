@@ -204,42 +204,42 @@ const PAPER_SECTIONS = [
     id: 'threshold', title: '1. The assembly threshold', hook: 'When does chemistry stop looking accidental?',
     quote: '“The physical scale of causation is quantified by the assembly index.”',
     body: 'The paper argues that a complex object only becomes strong evidence for life, technology, or another persistent cause when it is both hard to assemble and observed in copies. A single weird molecule can be luck; many copies of a high-assembly molecule imply a constructor.',
-    concepts: [['Assembly index', 'Minimum recursive construction steps.'], ['Copy number', 'How many identical objects are observed.'], ['Threshold', 'The region where chance becomes a bad explanation.'], ['Constructor', 'The persistent mechanism that keeps remaking the object.']],
+    concepts: [['Assembly index', 'Minimum recursive construction steps.', '#strings'], ['Copy number', 'How many identical objects are observed.', '#lab'], ['Threshold', 'The region where chance becomes a bad explanation.', '#lab'], ['Constructor', 'The persistent mechanism that keeps remaking the object.', '#sim']],
     tryHref: '#lab', tryText: 'Move the assembly/copy thresholds'
   },
   {
     id: 'space', title: '2. Assembly space', hook: 'The possible universe is bigger than the observed universe.',
     quote: '“Assembly space encodes causal possibilities as a physical space.”',
     body: 'Every join opens a branching set of possible objects. The paper distinguishes the vast assembly universe from the tiny subset actually observed. Life matters because it repeatedly finds and reuses paths through that space.',
-    concepts: [['Assembly universe', 'Everything that could be built.'], ['Assembly observed', 'What actually exists in the sample.'], ['Branching factor', 'How quickly possibilities explode.'], ['Lineage', 'A path selected through the possible space.']],
+    concepts: [['Assembly universe', 'Everything that could be built.', '#funnel'], ['Assembly observed', 'What actually exists in the sample.', '#lab'], ['Branching factor', 'How quickly possibilities explode.', '#formulas'], ['Lineage', 'A path selected through the possible space.', '#sim']],
     tryHref: '#funnel', tryText: 'See the causal funnel'
   },
   {
     id: 'metrology', title: '3. Metrology: measuring causation', hook: 'The big claim is not mystical — it must be measurable.',
     quote: '“Assembly theory introduces causation as a material property.”',
     body: 'The paper frames assembly as a lab metrology. For molecules, the hard version means inferring substructures from real instruments such as mass spectrometry or NMR, then estimating the shortest assembly path that explains the object.',
-    concepts: [['Mass spec fragments', 'Observed pieces produced by breaking molecules.'], ['Graph decomposition', 'Represent a molecule as atoms and bonds.'], ['Virtual intermediates', 'Useful substructures on an assembly path.'], ['Instrument limit', 'What the measurement can and cannot resolve.']],
+    concepts: [['Mass spec fragments', 'Observed pieces produced by breaking molecules.', '#molecular'], ['Graph decomposition', 'Represent a molecule as atoms and bonds.', '#molecular'], ['Virtual intermediates', 'Useful substructures on an assembly path.', '#molecular'], ['Instrument limit', 'What the measurement can and cannot resolve.', '#formulas']],
     tryHref: '#molecular', tryText: 'Open the molecular hard zone'
   },
   {
     id: 'memory', title: '4. Contingency and memory', hook: 'Copies are frozen history.',
     quote: '“Countable copies of high assembly index objects indicate a persistent mechanism.”',
     body: 'A high copy number is treated as evidence that the environment has memory. The system discovered a construction path and keeps reusing it. This is why the copy axis matters as much as the complexity axis.',
-    concepts: [['Memory', 'A discovered object biases future production.'], ['Contingency', 'History could have gone otherwise.'], ['Persistence', 'The cause keeps acting through time.'], ['Evidence', 'High assembly plus copies beats either alone.']],
+    concepts: [['Memory', 'A discovered object biases future production.', '#sim'], ['Contingency', 'History could have gone otherwise.', '#funnel'], ['Persistence', 'The cause keeps acting through time.', '#sim'], ['Evidence', 'High assembly plus copies beats either alone.', '#lab']],
     tryHref: '#sim', tryText: 'Run random vs selection'
   },
   {
     id: 'ratchet', title: '5. Selection and the ratchet', hook: 'Once something useful exists, the future changes.',
     quote: '“Determinism is emergent from selection along assembled lineages.”',
     body: 'Selection creates a ratchet. Objects that would be astronomically unlikely by blind search become stepping stones. That lets systems climb into deeper assembly space, producing novelty without requiring every step to be lucky again.',
-    concepts: [['Ratchet', 'Reuse makes future complexity cheaper.'], ['Open-endedness', 'New objects become new building blocks.'], ['Selection', 'Some histories are amplified.'], ['Emergent determinism', 'Stable lineages make futures more predictable.']],
+    concepts: [['Ratchet', 'Reuse makes future complexity cheaper.', '#sim'], ['Open-endedness', 'New objects become new building blocks.', '#funnel'], ['Selection', 'Some histories are amplified.', '#sim'], ['Emergent determinism', 'Stable lineages make futures more predictable.', '#sim']],
     tryHref: '#sim', tryText: 'Toggle selection mode'
   },
   {
     id: 'critique', title: '6. What to be careful about', hook: 'The paper is ambitious, and the debate matters.',
     quote: '“The universe designs itself.”',
     body: 'The strongest app stance is honest: assembly theory is a powerful lens, but critics argue parts resemble compression or known complexity measures. The practical, testable core is narrower: high molecular assembly plus high copy number can be a biosignature-style signal.',
-    concepts: [['Compression critique', 'Repeated structure can look like compression.'], ['Substrate rules', 'Strings, molecules, and tools assemble differently.'], ['Approximation', 'Exact minimal assembly is hard.'], ['Useful core', 'Benchmark complexity plus abundance.']],
+    concepts: [['Compression critique', 'Repeated structure can look like compression.', '#strings'], ['Substrate rules', 'Strings, molecules, and tools assemble differently.', '#molecular'], ['Approximation', 'Exact minimal assembly is hard.', '#molecular'], ['Useful core', 'Benchmark complexity plus abundance.', '#lab']],
     tryHref: '#strings', tryText: 'Compare string reuse'
   }
 ];
@@ -267,7 +267,7 @@ function renderPaperCompanion() {
     <p class="lede" style="font-size:1.2rem">${escapeHtml(sec.hook)}</p>
     <p>${escapeHtml(sec.body)}</p>
     <div class="quote">${escapeHtml(sec.quote)}</div>
-    <div class="concept-grid">${sec.concepts.map(([name, text]) => `<div class="concept"><b>${escapeHtml(name)}</b><span class="mini">${escapeHtml(text)}</span></div>`).join('')}</div>
+    <div class="concept-grid">${sec.concepts.map(([name, text, href]) => `<a class="concept" href="${href || sec.tryHref}"><b>${escapeHtml(name)}</b><span class="mini">${escapeHtml(text)}</span><span class="jump">Open related demo →</span></a>`).join('')}</div>
     <a class="try-link" href="${sec.tryHref}">→ ${escapeHtml(sec.tryText)}</a>
   `;
   $('figureAtlas').innerHTML = FIGURE_ATLAS.map(([fig, text, href]) => `<a class="figure-tile" href="${href}"><b>${fig}</b><p class="mini">${escapeHtml(text)}</p></a>`).join('');
