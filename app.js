@@ -189,13 +189,114 @@ function renderSim() {
 }
 function setSimRunning(on) { if (on && !simTimer) simTimer = setInterval(simStep, 160); if (!on && simTimer) { clearInterval(simTimer); simTimer = null; } $('runSim').textContent = simTimer ? 'Pause simulation' : 'Run simulation'; }
 
-function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); }
+
+const MOLECULES = {
+  benzene: {
+    name: 'Benzene ring', kind: 'aromatic chemistry', baseAi: 12,
+    nodes: ['C','C','C','C','C','C'], edges: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]], motifs: ['ring symmetry ×6'],
+    fragments: [{mz:39,label:'C3H3+'},{mz:51,label:'C4H3+'},{mz:77,label:'C6H5+'},{mz:78,label:'C6H6+'}]
+  },
+  caffeine: {
+    name: 'Caffeine', kind: 'bioactive molecule', baseAi: 23,
+    nodes: ['N','C','N','C','C','N','C','N','O','O','CH3','CH3','CH3'], edges: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[3,6],[6,7],[7,4],[1,8],[6,9],[0,10],[5,11],[7,12]], motifs: ['fused ring', 'three methyl repeats'],
+    fragments: [{mz:55,label:'xanthine fragment'},{mz:82,label:'methyl-xanthine'},{mz:109,label:'purine core'},{mz:194,label:'molecular ion'}]
+  },
+  peptide: {
+    name: 'Repeated peptide motif', kind: 'biological polymer', baseAi: 31,
+    nodes: ['N','Cα','C','N','Cα','C','N','Cα','C','R','R','R'], edges: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[1,9],[4,10],[7,11]], motifs: ['peptide backbone ×3', 'side-chain repeats'],
+    fragments: [{mz:72,label:'immonium ion'},{mz:147,label:'dipeptide b-ion'},{mz:218,label:'tripeptide y-ion'},{mz:329,label:'parent motif'}]
+  },
+  taxol: {
+    name: 'Paclitaxel / Taxol-like scaffold', kind: 'high assembly natural product', baseAi: 47,
+    nodes: ['A','B','C','D','E','O','O','O','Ph','Ph','Ac','N','C','O','C'], edges: [[0,1],[1,2],[2,3],[3,4],[4,0],[1,5],[2,6],[3,7],[0,8],[4,9],[5,10],[9,11],[11,12],[12,13],[13,14]], motifs: ['multi-ring scaffold', 'phenyl repeats', 'oxygenated side chain'],
+    fragments: [{mz:105,label:'benzoyl cation'},{mz:286,label:'taxane core fragment'},{mz:509,label:'side-chain loss'},{mz:854,label:'molecular ion'}]
+  }
+};
+let selectedMol = 'caffeine';
+
+function estimateMolAi(mol) {
+  const graphCost = mol.nodes.length + mol.edges.length - 1;
+  const motifDiscount = mol.motifs.length * 3;
+  return Math.max(1, Math.round((graphCost + mol.baseAi) / 2 - motifDiscount));
+}
+function parsePeaks(text) {
+  return text.split(/[\s,;]+/).map(x => Number(x.trim())).filter(Number.isFinite);
+}
+function fragmentMatches(mol) {
+  const peaks = parsePeaks($('peakInput').value);
+  return mol.fragments.map(f => {
+    const nearest = peaks.reduce((best, p) => Math.abs(p - f.mz) < Math.abs(best - f.mz) ? p : best, peaks[0] ?? NaN);
+    const delta = Number.isFinite(nearest) ? Math.abs(nearest - f.mz) : Infinity;
+    return { ...f, nearest, hit: delta <= 1.2, delta };
+  });
+}
+function molEvidenceScore(mol) {
+  const ai = estimateMolAi(mol);
+  const copies = Number($('molCopies')?.value || 1);
+  const confidence = Number($('molConfidence')?.value || 50) / 100;
+  const matches = fragmentMatches(mol);
+  const fragmentScore = matches.filter(m => m.hit).length / matches.length;
+  return Math.round((ai * 1.7 + log10(copies) * 12 + fragmentScore * 30) * confidence);
+}
+function renderMolButtons() {
+  $('molButtons').innerHTML = Object.entries(MOLECULES).map(([key, mol]) => `<button data-mol="${key}" class="${key === selectedMol ? 'active' : ''}"><b>${mol.name}</b><span class="mini">${mol.kind} · motifs: ${mol.motifs.join(', ')}</span></button>`).join('');
+  $('molButtons').querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => { selectedMol = btn.dataset.mol; loadStrongPeaks(); renderMol(); }));
+}
+function renderMolGraph(mol) {
+  const W = 620, H = 360, cx = W/2, cy = H/2;
+  const coords = mol.nodes.map((_, i) => {
+    const angle = (Math.PI * 2 * i / mol.nodes.length) - Math.PI/2;
+    const radius = 105 + (i % 3) * 24;
+    return [cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius];
+  });
+  $('molGraph').innerHTML = `<rect width="${W}" height="${H}" rx="24" fill="#07101f"/>` +
+    mol.edges.map(([a,b]) => `<line x1="${coords[a][0]}" y1="${coords[a][1]}" x2="${coords[b][0]}" y2="${coords[b][1]}"/>`).join('') +
+    mol.nodes.map((n,i) => `<g><circle cx="${coords[i][0]}" cy="${coords[i][1]}" r="20"/><text x="${coords[i][0]}" y="${coords[i][1]}">${escapeHtml(n)}</text></g>`).join('') +
+    `<text x="24" y="32" style="text-anchor:start;fill:var(--dim);font:700 14px var(--mono)">${escapeHtml(mol.name)}</text>`;
+}
+function renderFragments(mol) {
+  const matches = fragmentMatches(mol);
+  $('fragmentTable').innerHTML = matches.map(m => `<div class="fragment-row"><span>${escapeHtml(m.label)}</span><span>${m.mz.toFixed(1)} m/z</span><span class="${m.hit ? 'hit' : 'miss'}">${m.hit ? 'hit' : 'miss'}</span></div>`).join('');
+  const hits = matches.filter(m => m.hit).length;
+  $('peakSummary').textContent = `${hits}/${matches.length} expected fragments matched. ${hits >= 3 ? 'Strong fragment support for this assembly estimate.' : hits >= 2 ? 'Partial support; useful but not definitive.' : 'Weak support; this would need better spectra or a different structure.'}`;
+  $('peakSummary').className = hits >= 3 ? 'verdict hot' : 'verdict';
+}
+function renderMol() {
+  if (!$('molButtons')) return;
+  const mol = MOLECULES[selectedMol];
+  renderMolButtons();
+  renderMolGraph(mol);
+  renderFragments(mol);
+  const ai = estimateMolAi(mol);
+  const copies = Number($('molCopies').value);
+  $('molAi').textContent = ai;
+  $('molCopyLabel').textContent = fmt.format(copies);
+  $('molEvidence').textContent = molEvidenceScore(mol);
+}
+function loadStrongPeaks() {
+  const mol = MOLECULES[selectedMol];
+  $('peakInput').value = mol.fragments.map(f => (f.mz + (Math.random() - .5) * .7).toFixed(2)).join(', ');
+}
+function loadNoisyPeaks() {
+  const mol = MOLECULES[selectedMol];
+  const noise = [31.1, 44.0, 63.3, 91.2, 120.4, 171.8, 260.5, 410.2];
+  $('peakInput').value = [mol.fragments[0].mz.toFixed(2), ...noise].join(', ');
+}
+function addMolToSample() {
+  const mol = MOLECULES[selectedMol];
+  sample.push({ name: mol.name, ai: estimateMolAi(mol), copies: Number($('molCopies').value), kind: mol.kind });
+  renderAll();
+  location.hash = '#lab';
+}
+
+function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); renderMol(); }
 function boot() {
   $('thresholdAi').addEventListener('input', e => { thresholdAi = Number(e.target.value); $('thresholdAiVal').textContent = thresholdAi; renderAll(); });
   $('thresholdCopies').addEventListener('input', e => { thresholdCopies = Number(e.target.value); $('thresholdCopiesVal').textContent = thresholdCopies; renderAll(); });
   document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => { sample = structuredClone(PRESETS[b.dataset.preset]); renderAll(); }));
   $('addObject').addEventListener('click', () => { sample.push({ name: 'new object', ai: 12, copies: 10, kind: 'unknown' }); renderAll(); });
   $('stringInput').addEventListener('input', renderStringLab);
+  if ($('peakInput')) { loadStrongPeaks(); $('peakInput').addEventListener('input', renderMol); $('molCopies').addEventListener('input', renderMol); $('molConfidence').addEventListener('input', renderMol); $('loadGoodPeaks').addEventListener('click', () => { loadStrongPeaks(); renderMol(); }); $('loadNoisyPeaks').addEventListener('click', () => { loadNoisyPeaks(); renderMol(); }); $('addMolToSample').addEventListener('click', addMolToSample); }
   $('runSim').addEventListener('click', () => setSimRunning(!simTimer));
   $('stepSim').addEventListener('click', simStep);
   $('resetSim').addEventListener('click', () => { setSimRunning(false); initSim(); });
