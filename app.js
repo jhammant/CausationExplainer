@@ -35,9 +35,16 @@ let simHistory = [];
 let simMode = 'random';
 
 function log10(v) { return Math.log10(Math.max(1, v)); }
-function assemblyField(rows) {
+function log10AssemblyOverOmega(rows) {
   const total = rows.reduce((s, r) => s + Number(r.copies || 0), 0) || 1;
-  return rows.reduce((s, r) => s + Number(r.copies || 0) * Math.exp(Number(r.ai || 0) / 5), 0) / total;
+  const terms = rows.filter(r => Number(r.copies || 0) > 1).map(r => Math.log(Number(r.copies || 0)) + Number(r.ai || 0));
+  if (!terms.length) return 0;
+  const max = Math.max(...terms);
+  const logSum = max + Math.log(terms.reduce((sum, t) => sum + Math.exp(t - max), 0));
+  return (logSum - Math.log(total)) / Math.LN10;
+}
+function epistemologicalThreshold(NT, M = 1, b = 12) {
+  return Math.floor(Math.log(Math.max(1, NT / M)) / Math.log(1 + b)) - 1;
 }
 function evidenceClass(row) {
   const ai = Number(row.ai); const copies = Number(row.copies);
@@ -99,14 +106,15 @@ function renderPlot() {
 }
 
 function renderMetrics() {
-  const A = assemblyField(sample);
+  const A = log10AssemblyOverOmega(sample);
+  const calculatedThreshold = epistemologicalThreshold(sample.reduce((s, r) => s + Number(r.copies || 0), 0) || 1);
   const flagged = sample.filter(r => evidenceClass(r) === 'selected');
   const maxAi = Math.max(...sample.map(r => r.ai));
   const maxCopies = Math.max(...sample.map(r => r.copies));
   $('fieldScore').textContent = A.toFixed(2);
   $('deepestObject').textContent = sample.find(r => r.ai === maxAi)?.name || '—';
   $('largestCopy').textContent = fmt.format(maxCopies);
-  $('verdict').textContent = flagged.length ? `${flagged.length} object${flagged.length > 1 ? 's' : ''} cross the causation threshold.` : 'No object currently crosses both thresholds.';
+  $('verdict').textContent = flagged.length ? `${flagged.length} object${flagged.length > 1 ? 's' : ''} cross the causation threshold. Eq. 1 gives aᴹ≈${calculatedThreshold} for this sample size at b=12, M=1.` : `No object currently crosses both thresholds. Eq. 1 gives aᴹ≈${calculatedThreshold} for this sample size at b=12, M=1.`;
   $('verdict').className = flagged.length ? 'verdict hot' : 'verdict';
 }
 
