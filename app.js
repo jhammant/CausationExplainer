@@ -200,6 +200,116 @@ function setSimRunning(on) { if (on && !simTimer) simTimer = setInterval(simStep
 
 
 
+
+const DEEP_DIVES = [
+  {
+    title: 'Causation as a material property',
+    quote: 'Assembly theory introduces causation as a material property.',
+    link: '#idea',
+    body: [
+      'The paper’s central move is to stop treating causation as merely a story imposed by an observer. Instead, it proposes that constructed objects physically encode part of the causal chain that made them possible.',
+      'In this view, a molecule, tool, or biological structure is not only arranged matter. It is arranged matter whose existence implies a sequence of prior joins, constraints, and selections. The app turns that claim into a question the reader can ask repeatedly: what evidence would force me to infer a persistent cause?',
+      'This is why the page keeps pairing text with interactions. The widgets are not decorative; they are attempts to make the proposed metrology feel inspectable.'
+    ],
+    bullets: ['Use the phase plot to ask when chance stops being a satisfying explanation.', 'Use the funnel to compare possible objects with observed lineages.', 'Use molecular evidence to see how a lab instrument might ground the claim.']
+  },
+  {
+    title: 'Assembly index and causal depth',
+    quote: 'The physical scale of causation is quantified by the assembly index.',
+    link: '#strings',
+    body: [
+      'Assembly index is the paper’s proposed scale for causal depth: the minimum number of recursive construction steps required to build an object from elementary building blocks.',
+      'The important detail is reuse. Once a part has been made, later construction can use it again. That makes repeated motifs, symmetries, and modular substructures visible as shortened histories.',
+      'The string lab is deliberately simple, but it makes the core idea tangible: ABABABAB is not hard in the same way as a random eight-character string, because one discovered subpart can be reused.'
+    ],
+    bullets: ['Shortest path matters, not any possible path.', 'Reuse is the signature that makes assembly different from raw size.', 'Exact minimal assembly is hard, so approximations need to expose uncertainty.']
+  },
+  {
+    title: 'Copy number as memory',
+    quote: 'Observing countable copies of high assembly index objects indicates a mechanism producing them is persistent.',
+    link: '#lab',
+    body: [
+      'The paper’s second axis is copy number. A high-assembly object found once can be an accident, a contamination, or a rare path through chemistry. But high-assembly objects found repeatedly imply the environment has acquired a kind of memory.',
+      'That memory can be biological replication, technological manufacturing, or another persistent constructor. The key claim is that copies transform complexity into evidence of a continuing causal process.',
+      'This is why the app treats “complex” and “common” separately. The top-right quadrant is where the argument becomes strongest.'
+    ],
+    bullets: ['Common + simple is ordinary physics.', 'Complex + rare is intriguing but weak.', 'Complex + copied is where selection, agency, or lineage becomes plausible.']
+  },
+  {
+    title: 'The threshold argument',
+    quote: 'Object types with assembly index greater than the threshold cannot form abiotically.',
+    link: '#formulas',
+    body: [
+      'The threshold formula asks what a finite system could plausibly find by blind exploration. The larger the search space opened by each step, the faster accidental copies of deep objects become implausible.',
+      'The paper distinguishes measurement limits from ontological limits. In practice, what we can claim depends on the sample size, the instrument’s resolution, and the branching factor assumed for the substrate.',
+      'The app’s formula explainer lets readers vary those parameters rather than treating “15” or any other number as magic.'
+    ],
+    bullets: ['Nᵀ controls how many opportunities the system has.', 'M controls what the instrument can resolve.', 'b controls how quickly possibilities branch.']
+  },
+  {
+    title: 'Assembly space and possible worlds',
+    quote: 'Assembly space encodes causal possibilities as a physical space.',
+    link: '#funnel',
+    body: [
+      'The paper asks readers to imagine not just physical space, but a space of constructible objects. Every causal join opens new possibilities, causing the number of potential objects to explode.',
+      'Life and technology do not explore that space uniformly. They carve narrow, historically contingent paths through it, reusing parts and amplifying successful structures.',
+      'The funnel visualisation is a compact version of that idea: the possible space is enormous, while the actually observed lineage is a tiny highlighted path.'
+    ],
+    bullets: ['Possible does not mean observed.', 'Observed does not mean randomly reachable.', 'Lineages make some futures much more likely than others.']
+  },
+  {
+    title: 'Metrology: measuring causation',
+    quote: 'Assembly space can be metrologically explored.',
+    link: '#molecular',
+    body: [
+      'The paper is strongest when it becomes measurable. For molecules, the practical path runs through graph representations, mass spectrometry, fragmentation evidence, and copy-number estimates.',
+      'A serious tool would not simply assign a number. It would show the molecular graph, candidate assembly paths, fragments that support those paths, confidence limits, controls, and possible false positives.',
+      'The molecular hard-zone prototype is a sketch of that workflow: simplified graph, estimated assembly, fragment matches, and a score that combines assembly, copies, and confidence.'
+    ],
+    bullets: ['Mass spec gives fragment evidence.', 'Graphs give candidate assembly paths.', 'Controls and confidence decide whether the inference is credible.']
+  },
+  {
+    title: 'Selection as a ratchet',
+    quote: 'Determinism is emergent from selection along assembled lineages.',
+    link: '#sim',
+    body: [
+      'The paper treats selection as a way for history to shape future possibility. Once a structure is discovered and copied, it becomes a resource for later construction.',
+      'That is the ratchet: the system does not need to rediscover every step from scratch. Existing objects change the odds of what can be built next.',
+      'The simulator makes this visible with toy strings. It is not a biology model; it is a demonstration of how amplification plus reuse changes the distribution of future objects.'
+    ],
+    bullets: ['Selection preserves some histories and discards others.', 'Copied motifs bias future construction.', 'Open-ended growth comes from new parts becoming reusable.']
+  },
+  {
+    title: 'Caveats and debate',
+    quote: 'The future is open and causally undetermined.',
+    link: '#paper',
+    body: [
+      'The paper is ambitious, and an honest companion should not flatten the debate. Critics may ask how assembly differs from compression, algorithmic complexity, or existing statistical accounts of structure.',
+      'The useful stance is to keep the strongest practical claim visible: high assembly plus high copy number is a candidate biosignature and a way to reason about selection, even if the broadest philosophical claims remain contested.',
+      'That is why this app exposes approximations, labels toy models as toy models, and points readers back to the source paper rather than pretending the interpretation is settled.'
+    ],
+    bullets: ['Do not hide approximation.', 'Distinguish toy substrate from chemistry.', 'Make the falsifiable measurement claim the centre of gravity.']
+  }
+];
+
+function renderDeepDives() {
+  if (!$('deepDiveGrid')) return;
+  $('deepDiveGrid').innerHTML = DEEP_DIVES.map((d, i) => `<button class="deep-card reveal" data-deep="${i}"><b>${escapeHtml(d.title)}</b><q>${escapeHtml(d.quote)}</q><span class="mini">Open a longer paper-grounded note.</span></button>`).join('');
+  $('deepDiveGrid').querySelectorAll('[data-deep]').forEach(btn => btn.addEventListener('click', () => openDeepDive(Number(btn.dataset.deep))));
+}
+function openDeepDive(i) {
+  const d = DEEP_DIVES[i];
+  if (!d || !$('paperModal')) return;
+  $('paperModalBody').innerHTML = `<span class="pill">Paper reading note</span><h2 id="paperModalTitle" style="margin-top:1rem">${escapeHtml(d.title)}</h2><q>${escapeHtml(d.quote)}</q>${d.body.map(p => `<p>${escapeHtml(p)}</p>`).join('')}<div class="note-block"><b>Why this matters in the app</b><ul>${d.bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}</ul></div><a class="try-link" href="${d.link}" onclick="document.getElementById('paperModal').classList.remove('open')">Open related interaction →</a> · <a href="https://arxiv.org/pdf/2601.00515">Open paper PDF</a>`;
+  $('paperModal').classList.add('open');
+  $('paperModal').setAttribute('aria-hidden', 'false');
+}
+function closeDeepDive() {
+  if (!$('paperModal')) return;
+  $('paperModal').classList.remove('open');
+  $('paperModal').setAttribute('aria-hidden', 'true');
+}
+
 let activeFormula = 'threshold';
 const FORMULA_EXPLAINERS = {
   ai: {
@@ -473,10 +583,13 @@ function addMolToSample() {
   location.hash = '#lab';
 }
 
-function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); renderFormulaExplainer(); renderPaperCompanion(); renderMol(); }
+function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); renderDeepDives(); renderFormulaExplainer(); renderPaperCompanion(); renderMol(); }
 function boot() {
   const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); }), { threshold: 0.12 });
   document.querySelectorAll('.card, .paper-note, .metric, .snippet-card, .formula-card, .figure-tile, .concept, .pipeline li').forEach((el, i) => { el.classList.add('reveal'); el.style.transitionDelay = `${Math.min(i % 6, 5) * 35}ms`; revealObserver.observe(el); });
+  $('paperModalClose')?.addEventListener('click', closeDeepDive);
+  $('paperModal')?.addEventListener('click', e => { if (e.target.id === 'paperModal') closeDeepDive(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDeepDive(); });
   $('thresholdAi').addEventListener('input', e => { thresholdAi = Number(e.target.value); $('thresholdAiVal').textContent = thresholdAi; renderAll(); });
   $('thresholdCopies').addEventListener('input', e => { thresholdCopies = Number(e.target.value); $('thresholdCopiesVal').textContent = thresholdCopies; renderAll(); });
   document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => { sample = structuredClone(PRESETS[b.dataset.preset]); renderAll(); }));
