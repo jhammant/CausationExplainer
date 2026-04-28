@@ -199,6 +199,107 @@ function setSimRunning(on) { if (on && !simTimer) simTimer = setInterval(simStep
 
 
 
+
+let activeFormula = 'threshold';
+const FORMULA_EXPLAINERS = {
+  ai: {
+    title: 'Assembly index: count the shortest causal history',
+    eq: 'aᵢ = n',
+    why: 'This is the paper’s basic unit of causal depth. It asks: how many joins must have happened before this object could exist?',
+    vars: [['aᵢ', 'assembly index for object type i'], ['n', 'number of causal joins along a shortest assembly path'], ['causal join', 'a step that combines existing parts into a new reusable part']],
+    demo: 'ai'
+  },
+  copy: {
+    title: 'Copy number: turn complexity into evidence',
+    eq: 'nᵢ',
+    why: 'A high assembly object found once may be a fluke. A high assembly object found many times implies persistence: a constructor, lineage, factory, or selection process.',
+    vars: [['nᵢ', 'count of identical distinguishable objects'], ['object type i', 'the repeated structure being counted'], ['persistence', 'the same causal pathway keeps being instantiated']],
+    demo: 'copy'
+  },
+  threshold: {
+    title: 'Epistemological threshold: what blind search should not find',
+    eq: 'aᴹ = ⌊ ln(Nᵀ/M) / ln(1+b) ⌋ − 1',
+    why: 'This estimates the assembly depth above which a finite abiotic system should not produce observable copies without selection.',
+    vars: [['Nᵀ', 'total number of objects/opportunities in the system'], ['M', 'measurement resolution or minimum observable abundance'], ['b', 'branching factor: how many new possibilities each causal step opens']],
+    demo: 'threshold'
+  },
+  abiotic: {
+    title: 'Abiotic expectation: copies decay exponentially with depth',
+    eq: '⟨nᵢ(d)⟩ = Nᵀ e^{−(d+1)ln(1+b)}',
+    why: 'As constructive depth increases, the expected number of accidental copies collapses. This is why the top-right phase-plot region matters.',
+    vars: [['d', 'constructive depth / number of steps'], ['b', 'branching factor'], ['⟨nᵢ(d)⟩', 'expected copy number without selection']],
+    demo: 'abiotic'
+  },
+  system: {
+    title: 'System assembly: the whole sample as causal evidence',
+    eq: 'A = Ω · 1/Nᵀ · Σ nᵢ e^{aᵢ}',
+    why: 'The sample-level measure weights copied objects exponentially by assembly index. In the app we display log₁₀(A/Ω) to keep the number readable.',
+    vars: [['A', 'system assembly'], ['Ω', 'assembly constant / units factor'], ['Σ nᵢ e^{aᵢ}', 'copied high-assembly objects dominate the sum']],
+    demo: 'system'
+  },
+  time: {
+    title: 'A(t): watch causation accumulate over time',
+    eq: 'A(t) = Ω Σ e^{aᵢ} nᵢ(t)/Nᵀ(t)',
+    why: 'The dynamic equation says assembly changes as copy numbers change. That is what the selection simulator makes visible.',
+    vars: [['t', 'time'], ['nᵢ(t)', 'copy number through time'], ['Nᵀ(t)', 'total population through time']],
+    demo: 'time'
+  }
+};
+
+function formulaDemoHtml(kind) {
+  if (kind === 'ai') {
+    const r = greedyAssemblyIndex($('stringInput')?.value || 'REPLICATIONREPLICATION');
+    return `<div class="formula-demo"><h3>Try it on a string</h3><p>The current string lab target has assembly index:</p><div class="formula-demo-output">aᵢ = ${r.index}</div><p class="mini">No-reuse worst case: ${Math.max(0, r.target.length - 1)} joins. Repeated sub-parts reduce the history.</p><a class="try-link" href="#strings">Open string assembly →</a></div>`;
+  }
+  if (kind === 'copy') {
+    const rows = [...sample].sort((a,b) => b.copies - a.copies).slice(0,4);
+    const max = Math.max(...rows.map(r => r.copies), 1);
+    return `<div class="formula-demo"><h3>Current sample copy numbers</h3><div class="bar-stack">${rows.map(r => `<div class="bar-row"><span>${escapeHtml(r.name)}</span><i style="width:${Math.max(4, r.copies/max*100)}%"></i><b>${fmt.format(r.copies)}</b></div>`).join('')}</div><a class="try-link" href="#lab">Edit copy numbers →</a></div>`;
+  }
+  if (kind === 'threshold') {
+    return `<div class="formula-demo"><h3>Threshold calculator</h3><label>Nᵀ total opportunities <input id="fxNT" type="range" min="2" max="12" value="6"></label><label>M measurement limit <input id="fxM" type="range" min="0" max="4" value="0"></label><label>b branching factor <input id="fxB" type="range" min="2" max="30" value="12"></label><div id="fxThresholdOut" class="formula-demo-output">—</div><p class="mini">Higher branching makes accidental deep copies harder; larger systems raise the threshold slowly.</p></div>`;
+  }
+  if (kind === 'abiotic') {
+    return `<div class="formula-demo"><h3>Abiotic copy decay</h3><label>d constructive depth <input id="fxDepth" type="range" min="0" max="30" value="10"></label><label>b branching factor <input id="fxAbioticB" type="range" min="2" max="30" value="12"></label><div id="fxAbioticOut" class="formula-demo-output">—</div><svg id="fxAbioticChart" viewBox="0 0 560 150"></svg></div>`;
+  }
+  if (kind === 'system') {
+    const rows = sample.filter(r => r.copies > 1).map(r => ({...r, contribution: (Math.log(r.copies) + r.ai) / Math.LN10})).sort((a,b)=>b.contribution-a.contribution).slice(0,4);
+    const max = Math.max(...rows.map(r => r.contribution), 1);
+    return `<div class="formula-demo"><h3>Who dominates A?</h3><p class="mini">Showing log contribution ≈ log₁₀(nᵢe^{aᵢ}).</p><div class="bar-stack">${rows.map(r => `<div class="bar-row"><span>${escapeHtml(r.name)}</span><i style="width:${Math.max(4, r.contribution/max*100)}%"></i><b>${r.contribution.toFixed(1)}</b></div>`).join('')}</div><a class="try-link" href="#lab">Change the sample →</a></div>`;
+  }
+  return `<div class="formula-demo"><h3>Dynamic version</h3><p>The main simulator is the interactive explanation: selection changes nᵢ(t), and therefore A(t), over time.</p><div class="formula-demo-output">A(t)</div><a class="try-link" href="#sim">Run the selection simulator →</a></div>`;
+}
+
+function renderFormulaExplainer() {
+  if (!$('formulaExplainer')) return;
+  const f = FORMULA_EXPLAINERS[activeFormula];
+  document.querySelectorAll('.formula-pick').forEach(card => card.classList.toggle('active', card.dataset.formula === activeFormula));
+  $('formulaExplainer').innerHTML = `<div class="card"><span class="pill">Interactive explainer</span><h3 style="margin-top:1rem">${escapeHtml(f.title)}</h3><div class="eq">${f.eq}</div><p>${escapeHtml(f.why)}</p><div class="formula-variables">${f.vars.map(([k,v]) => `<div><b>${escapeHtml(k)}</b><span class="mini"> ${escapeHtml(v)}</span></div>`).join('')}</div></div>${formulaDemoHtml(f.demo)}`;
+  attachFormulaDemoHandlers();
+}
+function attachFormulaDemoHandlers() {
+  const updateThreshold = () => {
+    if (!$('fxThresholdOut')) return;
+    const NT = 10 ** Number($('fxNT').value), M = 10 ** Number($('fxM').value), b = Number($('fxB').value);
+    $('fxThresholdOut').textContent = `aᴹ = ${epistemologicalThreshold(NT, M, b)}`;
+  };
+  ['fxNT','fxM','fxB'].forEach(id => $(id)?.addEventListener('input', updateThreshold));
+  updateThreshold();
+  const updateAbiotic = () => {
+    if (!$('fxAbioticOut')) return;
+    const d = Number($('fxDepth').value), b = Number($('fxAbioticB').value), NT = 1e9;
+    const expected = NT * Math.exp(-(d + 1) * Math.log(1 + b));
+    $('fxAbioticOut').textContent = `⟨nᵢ(${d})⟩ ≈ ${expected < .001 ? expected.toExponential(1) : expected.toFixed(3)}`;
+    const pts = Array.from({length:31}, (_,x) => {
+      const yv = Math.log10(Math.max(1e-9, NT * Math.exp(-(x + 1) * Math.log(1 + b))));
+      return `${20 + x * 17},${125 - clamp((yv + 9) / 18, 0, 1) * 105}`;
+    }).join(' ');
+    $('fxAbioticChart').innerHTML = `<rect width="560" height="150" rx="18" fill="#07101f"/><polyline points="${pts}" fill="none" stroke="var(--pink)" stroke-width="3"/><text x="22" y="30" fill="var(--dim)" font-family="monospace" font-size="13">expected copies vs depth</text>`;
+  };
+  ['fxDepth','fxAbioticB'].forEach(id => $(id)?.addEventListener('input', updateAbiotic));
+  updateAbiotic();
+}
+
 const PAPER_SECTIONS = [
   {
     id: 'threshold', title: '1. The assembly threshold', hook: 'When does chemistry stop looking accidental?',
@@ -372,13 +473,14 @@ function addMolToSample() {
   location.hash = '#lab';
 }
 
-function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); renderPaperCompanion(); renderMol(); }
+function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); renderFormulaExplainer(); renderPaperCompanion(); renderMol(); }
 function boot() {
   $('thresholdAi').addEventListener('input', e => { thresholdAi = Number(e.target.value); $('thresholdAiVal').textContent = thresholdAi; renderAll(); });
   $('thresholdCopies').addEventListener('input', e => { thresholdCopies = Number(e.target.value); $('thresholdCopiesVal').textContent = thresholdCopies; renderAll(); });
   document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => { sample = structuredClone(PRESETS[b.dataset.preset]); renderAll(); }));
   $('addObject').addEventListener('click', () => { sample.push({ name: 'new object', ai: 12, copies: 10, kind: 'unknown' }); renderAll(); });
-  $('stringInput').addEventListener('input', renderStringLab);
+  $('stringInput').addEventListener('input', () => { renderStringLab(); if (activeFormula === 'ai') renderFormulaExplainer(); });
+  document.querySelectorAll('.formula-pick').forEach(card => { card.addEventListener('click', (e) => { if (e.target.closest('a')) return; activeFormula = card.dataset.formula; renderFormulaExplainer(); }); card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activeFormula = card.dataset.formula; renderFormulaExplainer(); } }); });
   if ($('peakInput')) { loadStrongPeaks(); $('peakInput').addEventListener('input', renderMol); $('molCopies').addEventListener('input', renderMol); $('molConfidence').addEventListener('input', renderMol); $('loadGoodPeaks').addEventListener('click', () => { loadStrongPeaks(); renderMol(); }); $('loadNoisyPeaks').addEventListener('click', () => { loadNoisyPeaks(); renderMol(); }); $('addMolToSample').addEventListener('click', addMolToSample); }
   $('runSim').addEventListener('click', () => setSimRunning(!simTimer));
   $('stepSim').addEventListener('click', simStep);
