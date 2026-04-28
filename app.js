@@ -475,6 +475,8 @@ function addMolToSample() {
 
 function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); renderFormulaExplainer(); renderPaperCompanion(); renderMol(); }
 function boot() {
+  const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); }), { threshold: 0.12 });
+  document.querySelectorAll('.card, .paper-note, .metric, .snippet-card, .formula-card, .figure-tile, .concept, .pipeline li').forEach((el, i) => { el.classList.add('reveal'); el.style.transitionDelay = `${Math.min(i % 6, 5) * 35}ms`; revealObserver.observe(el); });
   $('thresholdAi').addEventListener('input', e => { thresholdAi = Number(e.target.value); $('thresholdAiVal').textContent = thresholdAi; renderAll(); });
   $('thresholdCopies').addEventListener('input', e => { thresholdCopies = Number(e.target.value); $('thresholdCopiesVal').textContent = thresholdCopies; renderAll(); });
   document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => { sample = structuredClone(PRESETS[b.dataset.preset]); renderAll(); }));
