@@ -7,6 +7,7 @@ Live site: https://jhammant.github.io/CausationExplainer/
 ## What it does
 
 - Explains assembly index + copy number as a proposed physical metrology for causation.
+- Includes a paper companion section with concept cards, short excerpts, figure atlas, and links into the interactive labs.
 - Provides an interactive sample lab: edit objects, copy counts, and assembly indices; watch points move on a complexity/abundance phase plot.
 - Runs a toy random-vs-selection simulation showing why complex objects in high abundance are the interesting regime.
 - Includes a string assembly calculator, reusing the pedagogical greedy approach from AssemblyExplainer.

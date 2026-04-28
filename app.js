@@ -190,6 +190,81 @@ function renderSim() {
 function setSimRunning(on) { if (on && !simTimer) simTimer = setInterval(simStep, 160); if (!on && simTimer) { clearInterval(simTimer); simTimer = null; } $('runSim').textContent = simTimer ? 'Pause simulation' : 'Run simulation'; }
 
 
+
+const PAPER_SECTIONS = [
+  {
+    id: 'threshold', title: '1. The assembly threshold', hook: 'When does chemistry stop looking accidental?',
+    quote: '“The physical scale of causation is quantified by the assembly index.”',
+    body: 'The paper argues that a complex object only becomes strong evidence for life, technology, or another persistent cause when it is both hard to assemble and observed in copies. A single weird molecule can be luck; many copies of a high-assembly molecule imply a constructor.',
+    concepts: [['Assembly index', 'Minimum recursive construction steps.'], ['Copy number', 'How many identical objects are observed.'], ['Threshold', 'The region where chance becomes a bad explanation.'], ['Constructor', 'The persistent mechanism that keeps remaking the object.']],
+    tryHref: '#lab', tryText: 'Move the assembly/copy thresholds'
+  },
+  {
+    id: 'space', title: '2. Assembly space', hook: 'The possible universe is bigger than the observed universe.',
+    quote: '“Assembly space encodes causal possibilities as a physical space.”',
+    body: 'Every join opens a branching set of possible objects. The paper distinguishes the vast assembly universe from the tiny subset actually observed. Life matters because it repeatedly finds and reuses paths through that space.',
+    concepts: [['Assembly universe', 'Everything that could be built.'], ['Assembly observed', 'What actually exists in the sample.'], ['Branching factor', 'How quickly possibilities explode.'], ['Lineage', 'A path selected through the possible space.']],
+    tryHref: '#funnel', tryText: 'See the causal funnel'
+  },
+  {
+    id: 'metrology', title: '3. Metrology: measuring causation', hook: 'The big claim is not mystical — it must be measurable.',
+    quote: '“Assembly theory introduces causation as a material property.”',
+    body: 'The paper frames assembly as a lab metrology. For molecules, the hard version means inferring substructures from real instruments such as mass spectrometry or NMR, then estimating the shortest assembly path that explains the object.',
+    concepts: [['Mass spec fragments', 'Observed pieces produced by breaking molecules.'], ['Graph decomposition', 'Represent a molecule as atoms and bonds.'], ['Virtual intermediates', 'Useful substructures on an assembly path.'], ['Instrument limit', 'What the measurement can and cannot resolve.']],
+    tryHref: '#molecular', tryText: 'Open the molecular hard zone'
+  },
+  {
+    id: 'memory', title: '4. Contingency and memory', hook: 'Copies are frozen history.',
+    quote: '“Countable copies of high assembly index objects indicate a persistent mechanism.”',
+    body: 'A high copy number is treated as evidence that the environment has memory. The system discovered a construction path and keeps reusing it. This is why the copy axis matters as much as the complexity axis.',
+    concepts: [['Memory', 'A discovered object biases future production.'], ['Contingency', 'History could have gone otherwise.'], ['Persistence', 'The cause keeps acting through time.'], ['Evidence', 'High assembly plus copies beats either alone.']],
+    tryHref: '#sim', tryText: 'Run random vs selection'
+  },
+  {
+    id: 'ratchet', title: '5. Selection and the ratchet', hook: 'Once something useful exists, the future changes.',
+    quote: '“Determinism is emergent from selection along assembled lineages.”',
+    body: 'Selection creates a ratchet. Objects that would be astronomically unlikely by blind search become stepping stones. That lets systems climb into deeper assembly space, producing novelty without requiring every step to be lucky again.',
+    concepts: [['Ratchet', 'Reuse makes future complexity cheaper.'], ['Open-endedness', 'New objects become new building blocks.'], ['Selection', 'Some histories are amplified.'], ['Emergent determinism', 'Stable lineages make futures more predictable.']],
+    tryHref: '#sim', tryText: 'Toggle selection mode'
+  },
+  {
+    id: 'critique', title: '6. What to be careful about', hook: 'The paper is ambitious, and the debate matters.',
+    quote: '“The universe designs itself.”',
+    body: 'The strongest app stance is honest: assembly theory is a powerful lens, but critics argue parts resemble compression or known complexity measures. The practical, testable core is narrower: high molecular assembly plus high copy number can be a biosignature-style signal.',
+    concepts: [['Compression critique', 'Repeated structure can look like compression.'], ['Substrate rules', 'Strings, molecules, and tools assemble differently.'], ['Approximation', 'Exact minimal assembly is hard.'], ['Useful core', 'Benchmark complexity plus abundance.']],
+    tryHref: '#strings', tryText: 'Compare string reuse'
+  }
+];
+
+const FIGURE_ATLAS = [
+  ['Fig 1', 'Taxol as a visually obvious high-assembly object.', '#molecular'],
+  ['Fig 2', 'Branching causal possibilities explode with each join.', '#funnel'],
+  ['Fig 3', 'Copy number vs assembly index creates a chance boundary.', '#lab'],
+  ['Fig 4', 'Observed assembly is nested inside possible assembly space.', '#funnel'],
+  ['Fig 5', 'A recursive pathway builds Taxol-like complexity.', '#molecular'],
+  ['Fig 6', 'Measurement limits decide what evidence can be seen.', '#molecular'],
+  ['Fig 7', 'Isomers can share formula but differ in assembly path.', '#molecular'],
+  ['Fig 8', 'Assembly rises as selected structure accumulates.', '#sim']
+];
+let activePaperSection = 0;
+
+function renderPaperCompanion() {
+  if (!$('paperMenu')) return;
+  $('paperMenu').innerHTML = PAPER_SECTIONS.map((sec, i) => `<button class="${i === activePaperSection ? 'active' : ''}" data-paper="${i}">${sec.title}<small>${sec.hook}</small></button>`).join('');
+  $('paperMenu').querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => { activePaperSection = Number(btn.dataset.paper); renderPaperCompanion(); }));
+  const sec = PAPER_SECTIONS[activePaperSection];
+  $('paperPanel').innerHTML = `
+    <span class="pill">Cronin & Walker · The Physics of Causation</span>
+    <h3 style="margin-top:1rem">${escapeHtml(sec.title)}</h3>
+    <p class="lede" style="font-size:1.2rem">${escapeHtml(sec.hook)}</p>
+    <p>${escapeHtml(sec.body)}</p>
+    <div class="quote">${escapeHtml(sec.quote)}</div>
+    <div class="concept-grid">${sec.concepts.map(([name, text]) => `<div class="concept"><b>${escapeHtml(name)}</b><span class="mini">${escapeHtml(text)}</span></div>`).join('')}</div>
+    <a class="try-link" href="${sec.tryHref}">→ ${escapeHtml(sec.tryText)}</a>
+  `;
+  $('figureAtlas').innerHTML = FIGURE_ATLAS.map(([fig, text, href]) => `<a class="figure-tile" href="${href}"><b>${fig}</b><p class="mini">${escapeHtml(text)}</p></a>`).join('');
+}
+
 const MOLECULES = {
   benzene: {
     name: 'Benzene ring', kind: 'aromatic chemistry', baseAi: 12,
@@ -289,7 +364,7 @@ function addMolToSample() {
   location.hash = '#lab';
 }
 
-function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); renderMol(); }
+function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); renderPaperCompanion(); renderMol(); }
 function boot() {
   $('thresholdAi').addEventListener('input', e => { thresholdAi = Number(e.target.value); $('thresholdAiVal').textContent = thresholdAi; renderAll(); });
   $('thresholdCopies').addEventListener('input', e => { thresholdCopies = Number(e.target.value); $('thresholdCopiesVal').textContent = thresholdCopies; renderAll(); });
