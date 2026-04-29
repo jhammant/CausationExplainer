@@ -294,7 +294,7 @@ const DEEP_DIVES = [
 
 function renderDeepDives() {
   if (!$('deepDiveGrid')) return;
-  $('deepDiveGrid').innerHTML = DEEP_DIVES.map((d, i) => `<button class="deep-card reveal" data-deep="${i}"><b>${escapeHtml(d.title)}</b><q>${escapeHtml(d.quote)}</q><span class="mini">Open a longer paper-grounded note.</span></button>`).join('');
+  $('deepDiveGrid').innerHTML = DEEP_DIVES.map((d, i) => `<button class="deep-card" data-deep="${i}"><b>${escapeHtml(d.title)}</b><q>${escapeHtml(d.quote)}</q><span class="mini">Open a longer paper-grounded note.</span></button>`).join('');
   $('deepDiveGrid').querySelectorAll('[data-deep]').forEach(btn => btn.addEventListener('click', () => openDeepDive(Number(btn.dataset.deep))));
 }
 function openDeepDive(i) {
@@ -585,6 +585,7 @@ function addMolToSample() {
 
 function renderAll() { renderRows(); renderPlot(); renderMetrics(); renderFunnel(); renderStringLab(); renderDeepDives(); renderFormulaExplainer(); renderPaperCompanion(); renderMol(); }
 function boot() {
+  initSim(); renderAll();
   const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); }), { threshold: 0.12 });
   document.querySelectorAll('.card, .paper-note, .metric, .snippet-card, .formula-card, .figure-tile, .concept, .pipeline li').forEach((el, i) => { el.classList.add('reveal'); el.style.transitionDelay = `${Math.min(i % 6, 5) * 35}ms`; revealObserver.observe(el); });
   $('paperModalClose')?.addEventListener('click', closeDeepDive);
@@ -601,7 +602,6 @@ function boot() {
   $('stepSim').addEventListener('click', simStep);
   $('resetSim').addEventListener('click', () => { setSimRunning(false); initSim(); });
   document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { simMode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.classList.toggle('active', x === b)); }));
-  initSim(); renderAll();
 }
 
 document.addEventListener('DOMContentLoaded', boot);
